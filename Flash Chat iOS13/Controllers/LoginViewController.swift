@@ -14,6 +14,11 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var emailTextfield: UITextField!
     @IBOutlet weak var passwordTextfield: UITextField!
     
+
+    override func viewDidLoad() {
+        emailTextfield.delegate = self
+        passwordTextfield.delegate = self
+    }
     
     @IBAction func loginPressed(_ sender: UIButton) {
         
@@ -23,11 +28,18 @@ class LoginViewController: UIViewController {
             if let error = error {
                 print(error.localizedDescription)
             } else {
-                self.performSegue(withIdentifier: "LoginToChat", sender: self)
+                self.performSegue(withIdentifier: K.loginSegue, sender: self)
             }
         }
         
         
     }
     
+}
+
+extension LoginViewController: UITextFieldDelegate {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        emailTextfield.endEditing(true)
+        passwordTextfield.endEditing(true)
+    }
 }
