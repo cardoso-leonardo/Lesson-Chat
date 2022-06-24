@@ -8,35 +8,72 @@
 
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 class ChatViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var messageTextfield: UITextField!
+    let db = Firestore.firestore()
     
-    var messages: [Message] = [
-    
-        Message(sender: "1@2.com", body: "Eae, blz?"),
-        Message(sender: "teste@teste.com", body: "Beleza e tu?"),
-        Message(sender: "1@2.com", body: "Tranquilo")
-        
-    ]
+    var messages: [Message] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.dataSource = self
         navigationItem.hidesBackButton = true
         navigationItem.title = K.appName
+        tableView.register(UINib(nibName: K.cellNibName, bundle: nil), forCellReuseIdentifier: K.cellIdentifier)
         let tap = UITapGestureRecognizer(target: view, action: #selector(UIView.endEditing))
         view.addGestureRecognizer(tap)
+        
+        loadMessages()
+        
+    }
+    
+    func loadMessages() {
+        
+        db.collection(K.FStore.collectionName).getDocuments { querySnapshot, error in
+            if let error = error {
+                print(error.localizedDescription)
+            }else{
+                if let documents = querySnapshot?.documents {
+                    for doc in documents {
+                        if let messageSender = doc.data()[K.FStore.senderField] as? String, let messageBody = doc.data()[K.FStore.bodyField] as? String {
+                            self.messages.append(Message(sender: messageSender, body: messageBody))
+                            DispatchQueue.main.async {
+                                self.tableView.reloadData()
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    
+    
+    
+    
+    @IBAction func sendPressed(_ sender: UIButton) {
+        
+        if let messageBody = messageTextfield.text, let messageSender = Auth.auth().currentUser?.email {
+            db.collection(K.FStore.collectionName).addDocument(data: [K.FStore.senderField: messageSender, K.FStore.bodyField: messageBody]) { error in
+                if let e = error {
+                    print("Error saving data to firestore \(e.localizedDescription)")
+                } else {
+                    print("Successfully saved data")
+                    self.messageTextfield.text = ""
+                }
+            }
+        }
+        
         
         
     }
     
-    @IBAction func sendPressed(_ sender: UIButton) {
-        
-    }
-
     @IBAction func logOutPressed(_ sender: UIBarButtonItem) {
         
         do {
@@ -57,16 +94,10 @@ extension ChatViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: K.cellIdentifier, for: indexPath)
-        cell.textLabel?.text = messages[indexPath.row].body
+        let cell = tableView.dequeueReusableCell(withIdentifier: K.cellIdentifier, for: indexPath) as! MessageCell
+        cell.messageLabel.text = messages[indexPath.row].body
         return cell
     }
     
- 
+    
 }
-
-//extension ChatViewController: UITextFieldDelegate {
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        messageTextfield.endEditing(true)
-//    }
-//}

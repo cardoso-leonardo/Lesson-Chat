@@ -12,11 +12,15 @@ import CLTypingLabel
 class WelcomeViewController: UIViewController {
 
     @IBOutlet weak var titleLabel: CLTypingLabel!
-
+    @IBOutlet weak var registerButton: UIButton!
+    @IBOutlet weak var logInButton: UIButton!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         titleLabel.text = K.appName
+        registerButton.layer.cornerRadius = registerButton.frame.height/2
+        logInButton.layer.cornerRadius = logInButton.frame.height/2
 //        titleLabel.text = ""
 //        let logoText = "⚡️FlashChat"
 //        var timeDelay = 0.0
